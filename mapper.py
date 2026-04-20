@@ -29,14 +29,15 @@ Rules:
 - If unsure, return "None"
 - Response MUST be valid JSON only
 - No explanation text
-
+- Strictly return json value containing position, sector and sub_sector keys
 Example:
-{{
-  "Branch Manager": {{
+{
+  {
+   "position":"Branch Manager",
     "sector": "Business",
     "sub_sector": "Wholesale business in specialized stores"
-  }}
-}}
+  }
+}
 """
 
     try:
@@ -60,11 +61,10 @@ Example:
 
         content = result["choices"][0]["message"]["content"]
 
-
         try:
             parsed = json.loads(content)
-        except:
-
+        except Exception as e:
+            print("Error parsing response content ", e)
             start = content.find("{")
             end = content.rfind("}") + 1
             parsed = json.loads(content[start:end])
@@ -102,17 +102,33 @@ def get_unmapped_positions(df):
 def apply_results_to_df(df, results):
     """
     Update dataframe with sector & subsector
+    Handles new result format (list of dicts)
     """
 
-    # df["sector"] = None
-    # df["sub sector"] = None
+    print("=" * 50)
+    print("results are:", results)
+    print("=" * 50)
 
+    # ✅ Normalize results into dict: {position: {...}}
+    result_map = {}
+
+    if isinstance(results, list):
+        for item in results:
+            pos = item.get("position")
+            if pos:
+                result_map[pos] = item
+
+    elif isinstance(results, dict):
+        # fallback if model sometimes returns old format
+        result_map = results
+
+    # ✅ Update dataframe
     for idx, row in df.iterrows():
         position = row["informal work in eng"]
 
-        if position in results:
-            df.at[idx, "sector"] = results[position].get("sector")
-            df.at[idx, "sub sector"] = results[position].get("sub_sector")
+        if position in result_map:
+            df.at[idx, "sector"] = result_map[position].get("sector")
+            df.at[idx, "sub sector"] = result_map[position].get("sub_sector")
 
     return df
 
@@ -172,7 +188,7 @@ def sector_subsector_mapper(test_mode=True):
                                         positions,
                                         sub_sectors_json,
                                         df_positions,
-                                        batch_size=20,
+                                        batch_size=10,
                                         output_file="output_with_sectors.csv")
                                                                                 
     if test_mode:

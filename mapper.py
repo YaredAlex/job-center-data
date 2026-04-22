@@ -188,7 +188,7 @@ def sector_subsector_mapper(test_mode=True):
                                         positions,
                                         sub_sectors_json,
                                         df_positions,
-                                        batch_size=10,
+                                        batch_size=50,
                                         output_file=output_file)
                                                                                 
     if test_mode:

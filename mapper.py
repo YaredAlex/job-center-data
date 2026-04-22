@@ -170,11 +170,11 @@ def sector_subsector_mapper(test_mode=True):
     # load sector-subsector
     with open("sub_sectors.json", "r") as file:
         sub_sectors_json = json.load(file)
-
+    output_file = "mapped_Hawi.csv"
     # load positions
-    df_positions = pd.read_csv("job positions - Tibarek Final.csv")
-    if os.path.exists("output_with_sectors.csv"):
-        df_positions = pd.read_csv("output_with_sectors.csv")
+    df_positions = pd.read_csv("job positions - Sheet5.csv")
+    if os.path.exists(output_file):
+        df_positions = pd.read_csv(output_file)
     #positions = df_positions['informal work in eng'].dropna().tolist()
     positions, mask = get_unmapped_positions(df_positions)
 
@@ -189,7 +189,7 @@ def sector_subsector_mapper(test_mode=True):
                                         sub_sectors_json,
                                         df_positions,
                                         batch_size=10,
-                                        output_file="output_with_sectors.csv")
+                                        output_file=output_file)
                                                                                 
     if test_mode:
         # apply results
